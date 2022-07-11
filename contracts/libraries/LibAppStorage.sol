@@ -6,13 +6,22 @@ import {LibMeta} from "./LibMeta.sol";
 
 struct AppStorage {
     bytes32 domainSeparator;
-    address owner;
     address gallionLabs;
-    address guildTokenContract;
     address guildContract;
+    address guildTokenContract;
+    address guildLootboxContract;
+    uint totalMaticBalance;
+    uint rewardMaticBalance;
+    uint8 rewardRatioFromIncome; // From 1 to 100 (%)
+    uint[] chanceByLootboxRarity; // From 1 to 100 (%)
+    uint[] rewardFactorByLootboxRarity; // From 1 to 100 (%)
     mapping(address => Admin) guildAdmins;
     mapping(address => Player) players;
-    mapping(uint32 => Lootbox) lootboxes;
+    mapping(uint256 => Lootbox) lootboxes;
+    mapping(uint16 => Rarity) lootboxDropLevels;
+    mapping(address => mapping(uint256 => uint256)) lootboxIdIndexes; // Lootbox indexes by player & lootbox id
+    uint32 transferGasLimit;
+    uint nPlayers;
 }
 
 struct Admin {
@@ -22,9 +31,12 @@ struct Admin {
 struct Player {
     uint createdAt;
     uint16 level;
+    uint256[] lootboxIds;
 }
 
 struct Lootbox {
+    uint256 id;
+    uint mintedAt;
     address owner;
     Rarity rarity;
 }
@@ -45,7 +57,19 @@ contract Modifiers {
     }
 
     modifier playerExists(address player) {
+        require(player != address(0), "LibAppStorage: Player address is not valid");
         require(s.players[player].createdAt > 0, "LibAppStorage: Player does not exist");
+        _;
+    }
+
+    modifier playerNotExists(address player) {
+        require(player != address(0), "LibAppStorage: Player address is not valid");
+        require(!(s.players[player].createdAt > 0), "PlayerFacet: Player already exists");
+        _;
+    }
+
+    modifier lootboxExists(uint256 lootbox) {
+        require(s.lootboxes[lootbox].mintedAt > 0, "LibAppStorage: Lootbox does not exist");
         _;
     }
 

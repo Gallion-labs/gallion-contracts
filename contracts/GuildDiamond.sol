@@ -61,5 +61,8 @@ contract GuildDiamond {
         }
     }
 
-    receive() external payable {}
+    receive() external payable {
+        s.totalMaticBalance += msg.value;
+        s.rewardMaticBalance += msg.value * s.rewardRatioFromIncome / 100;
+    }
 }

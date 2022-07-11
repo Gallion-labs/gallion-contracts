@@ -1,11 +1,20 @@
-import {ethers} from 'hardhat';
-import {Address} from '../types';
-import {DiamondCutFacet, DiamondLoupeFacet, GuildDiamond, OwnershipFacet, PlayerFacet} from '../typechain-types';
-import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
-import {PlayerStructOutput} from '../typechain-types/facets/PlayerFacet';
+import { ethers } from 'hardhat';
+import { Address } from '../types';
+import {
+    DiamondCutFacet,
+    DiamondLoupeFacet,
+    GuildDiamond,
+    GuildLootbox,
+    GuildToken,
+    OwnershipFacet,
+    PlayerFacet
+} from '../typechain-types';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { PlayerStructOutput } from '../typechain-types/contracts/facets/PlayerFacet';
+import { deployTokenERC20 } from '../scripts/deployForTests';
 
-const {deployDiamond} = require('../scripts/deploy.ts');
-const {assert} = require('chai');
+const { deployDiamond, deployLootboxERC721 } = require('../scripts/deployForTests.ts');
+const { assert } = require('chai');
 
 const Account = {
     Owner: 0,
@@ -20,6 +29,8 @@ const Account = {
 describe('Player Facet test', async function () {
     let accounts: SignerWithAddress[] = [];
     let diamondAddress: Address;
+    let tokenAddress: Address;
+    let lootboxAddress: Address;
     let guildContract: GuildDiamond;
     let diamondCutFacet: DiamondCutFacet;
     let diamondLoupeFacet: DiamondLoupeFacet;
@@ -28,7 +39,9 @@ describe('Player Facet test', async function () {
 
     before(async function () {
         accounts = await ethers.getSigners();
-        diamondAddress = await deployDiamond();
+        tokenAddress = await deployTokenERC20('Mayari Coin', 'MAYA');
+        lootboxAddress = await deployLootboxERC721('Mayari Lootbox', 'MLT');
+        diamondAddress = await deployDiamond(tokenAddress, lootboxAddress);
         guildContract = (await ethers.getContractAt('GuildDiamond', diamondAddress) as GuildDiamond);
         diamondCutFacet = (await ethers.getContractAt('DiamondCutFacet', diamondAddress) as DiamondCutFacet);
         diamondLoupeFacet = (await ethers.getContractAt('DiamondLoupeFacet', diamondAddress) as DiamondLoupeFacet);

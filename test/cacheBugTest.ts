@@ -1,7 +1,8 @@
 import { DiamondLoupeFacet, PlayerFacet } from '../typechain-types';
 import { ethers } from 'hardhat';
+import { deployTokenERC20 } from '../scripts/deployForTests';
 
-const { deployDiamond } = require('../scripts/deploy.ts');
+const { deployDiamond, deployLootboxERC721 } = require('../scripts/deployForTests.ts');
 const { FacetCutAction } = require('../scripts/libraries/diamond.ts');
 const { assert } = require('chai');
 
@@ -45,7 +46,9 @@ describe('Cache bug test', async () => {
       sel10
     ];
 
-    const diamondAddress = await deployDiamond();
+    const tokenERC20Address = await deployTokenERC20('Mayari Coin', 'MAYA');
+    const lootboxAddress = await deployLootboxERC721('Mayari Lootbox', 'MLT');
+    const diamondAddress = await deployDiamond(tokenERC20Address, lootboxAddress);
     const diamondCutFacet = await ethers.getContractAt('DiamondCutFacet', diamondAddress);
     diamondLoupeFacet = (await ethers.getContractAt('DiamondLoupeFacet', diamondAddress) as DiamondLoupeFacet);
     const PlayerFacet = await ethers.getContractFactory('PlayerFacet');
