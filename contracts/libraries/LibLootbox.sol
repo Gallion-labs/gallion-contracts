@@ -4,15 +4,58 @@ pragma solidity 0.8.13;
 import {AppStorage, Player, Lootbox, Rarity} from "./LibAppStorage.sol";
 import {LibDiamond} from "./LibDiamond.sol";
 import {LibUtils} from "./Utils.sol";
-import {GuildLootbox} from "../tokens/LootboxERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 library LibLootbox {
+    using Counters for Counters.Counter;
 
+    /**
+     * @dev Emitted when a lootbox is opened.
+     */
     event OpenLootboxEvent(address player, uint256 lootboxId);
+    /**
+     * @dev Emitted when the `tokenId` lootbox is transferred from `from` to `to`.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` lootbox.
+     */
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+
+
+    function mint(address to) internal returns (uint256) {
+        AppStorage storage s = LibDiamond.appStorage();
+        s.lootboxToken.tokenIds.increment();
+
+        uint256 newItemId = s.lootboxToken.tokenIds.current();
+        require(s.lootboxToken.owners[newItemId] != address(0), "ERC721: token already minted");
+
+        s.lootboxToken.balances[to] += 1;
+        s.lootboxToken.owners[newItemId] = to;
+
+        return newItemId;
+    }
+
+
+    function burn(uint256 tokenId) internal {
+        AppStorage storage s = LibDiamond.appStorage();
+        address owner = s.lootboxToken.owners[tokenId];
+        require(owner != address(0), "ERC721: invalid token ID");
+
+        // Clear approvals
+        s.lootboxToken.tokenApprovals[tokenId] = address(0);
+        emit Approval(owner, address(0), tokenId);
+
+        s.lootboxToken.balances[owner] -= 1;
+        delete s.lootboxToken.owners[tokenId];
+
+        emit Transfer(owner, address(0), tokenId);
+    }
 
     function award(address playerAddress) internal returns (uint256 _lootboxId) {
         AppStorage storage s = LibDiamond.appStorage();
-        _lootboxId = GuildLootbox(s.guildLootboxContract).mint(playerAddress);
+        _lootboxId = mint(playerAddress);
         if (_lootboxId > 0) {
             // calc the rarity
             uint random = LibUtils.random(100);
@@ -41,7 +84,7 @@ library LibLootbox {
             revert(string.concat("Error during send transaction: ", string(data)));
         }
 
-        GuildLootbox(s.guildLootboxContract).burn(lootboxId);
+        burn(lootboxId);
         removeFromPlayer(playerAddress, lootboxId);
         s.rewardMaticBalance -= playerReward;
         s.totalMaticBalance -= playerReward;

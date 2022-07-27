@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import {AppStorage, Modifiers, Player} from "../libraries/LibAppStorage.sol";
-import {LibLootbox} from "../libraries/LibLootbox.sol";
+import "../libraries/LibLootbox.sol";
 
 contract PlayerFacet is Modifiers {
     event LevelUpEvent(address player, uint16 level);

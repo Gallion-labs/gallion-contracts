@@ -6,23 +6,7 @@ import { Address } from '../types';
 /*console.log = () => {
 };*/
 
-async function deployTokenERC20(tokenName: string, tokenSymbol: string): Promise<Address> {
-    // deploy Guild Token ERC20 contract
-    const TokenERC20 = await ethers.getContractFactory('GuildToken');
-    const token = await TokenERC20.deploy(tokenName, tokenSymbol);
-    await token.deployed();
-    return token.address;
-}
-
-async function deployLootboxERC721(tokenName: string, tokenSymbol: string): Promise<Address> {
-    // deploy Lootbox ERC721 contract
-    const LootboxERC721 = await ethers.getContractFactory('GuildLootbox');
-    const lootbox = await LootboxERC721.deploy(tokenName, tokenSymbol);
-    await lootbox.deployed();
-    return lootbox.address;
-}
-
-async function deployDiamond(tokenERC20Address: Address, lootboxERC721Address: Address): Promise<Address> {
+async function deployDiamond(): Promise<Address> {
     const accounts = await ethers.getSigners();
     const contractOwner = accounts[0];
 
@@ -54,6 +38,7 @@ async function deployDiamond(tokenERC20Address: Address, lootboxERC721Address: A
         'OwnershipFacet',
         'PlayerFacet',
         'LootboxFacet',
+        'ERC20Facet',
     ];
     const cut = [];
     for (const FacetName of FacetNames) {
@@ -78,9 +63,7 @@ async function deployDiamond(tokenERC20Address: Address, lootboxERC721Address: A
     let functionCall = diamondInit.interface.encodeFunctionData('init', [
         {
             gallionLabs: accounts[9].address,
-            guildAdmins: [accounts[2].address],
-            guildTokenContract: tokenERC20Address,
-            guildLootboxContract: lootboxERC721Address
+            guildAdmins: [accounts[2].address]
         }
     ]);
     tx = await diamondCut.diamondCut(cut, diamondInit.address, functionCall);
@@ -104,4 +87,4 @@ async function deployDiamond(tokenERC20Address: Address, lootboxERC721Address: A
         });
 }*/
 
-export { deployDiamond, deployLootboxERC721, deployTokenERC20 };
+export { deployDiamond };

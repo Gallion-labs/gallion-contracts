@@ -2,7 +2,6 @@ import { ethers } from 'hardhat';
 import { Address } from '../types';
 import { DiamondCutFacet, DiamondLoupeFacet, GuildDiamond, OwnershipFacet, Test1Facet } from '../typechain-types';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { deployLootboxERC721, deployTokenERC20 } from '../scripts/deployForTests';
 
 const {
     getSelectors,
@@ -40,8 +39,6 @@ describe('Diamond test', async function () {
 
     before(async function () {
         accounts = await ethers.getSigners();
-        tokenERC20Address = await deployTokenERC20('Mayari Coin', 'MAYA');
-        lootboxAddress = await deployLootboxERC721('Mayari Lootbox', 'MLT');
         diamondAddress = await deployDiamond(tokenERC20Address, lootboxAddress);
         guildContract = (await ethers.getContractAt('GuildDiamond', diamondAddress) as GuildDiamond);
         diamondCutFacet = (await ethers.getContractAt('DiamondCutFacet', diamondAddress) as DiamondCutFacet);

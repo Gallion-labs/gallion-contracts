@@ -15,14 +15,10 @@ contract DiamondInit {
     struct Args {
         address gallionLabs;
         address[] guildAdmins;
-        address guildTokenContract;
-        address guildLootboxContract;
     }
 
     function init(Args memory _args) external {
         s.gallionLabs = _args.gallionLabs;
-        s.guildTokenContract = _args.guildTokenContract;
-        s.guildLootboxContract = _args.guildLootboxContract;
         s.rewardRatioFromIncome = 100;
 
         s.chanceByLootboxRarity = new uint[](4);
@@ -54,5 +50,6 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+        ds.supportedInterfaces[0x80ac58cd] = true; // ERC721
     }
 }
